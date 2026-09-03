@@ -15,11 +15,14 @@
 
 .chart-header h2 {
     margin: 0;
+    color: #111827;
+    font-weight: 700;
 }
 
 .chart-header p {
     margin: 5px 0 0;
-    color: #6b7280;
+    color: #4b5563;
+    font-weight: 500;
 }
 
 .chart-controls {
