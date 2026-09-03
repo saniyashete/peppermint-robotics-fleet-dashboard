@@ -44,21 +44,28 @@ io.on("connection", (socket) => {
   });
 });
 
+// Robot simulator
 const simulator = new RobotSimulator((robot) => {
   fleetState.set(robot.robot_id, robot);
 
   io.emit("robot:update", robot);
 });
 
+// Get simulator configuration
 app.get("/api/config", (req, res) => {
   res.json(simulator.getConfig());
 });
+
+// Update simulator configuration
 app.put("/api/config", (req, res) => {
-  const { fleetSize, updateInterval } = req.body;
+  const { fleetSize, updateInterval, payloadSize } = req.body;
 
   simulator.updateConfig({
     ...(fleetSize && { fleetSize: Number(fleetSize) }),
-    ...(updateInterval && { updateInterval: Number(updateInterval) }),
+    ...(updateInterval && {
+      updateInterval: Number(updateInterval),
+    }),
+    ...(payloadSize && { payloadSize }),
   });
 
   // Stop old simulator
@@ -67,17 +74,22 @@ app.put("/api/config", (req, res) => {
   // Clear old robots
   fleetState.clear();
 
-  // Start simulator with new config
+  // Start simulator with new configuration
   simulator.start();
 
   // Send new fleet to connected clients
-  io.emit("fleet:initial", simulator.robots);
+  io.emit(
+    "fleet:initial",
+    simulator.robots.map((robot) => simulator.formatPayload(robot)),
+  );
 
   res.json({
     message: "Configuration updated successfully",
     config: simulator.getConfig(),
   });
 });
+
+// Start simulator
 simulator.start();
 
 const PORT = process.env.PORT || 5000;

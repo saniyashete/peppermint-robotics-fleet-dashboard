@@ -38,14 +38,15 @@
     color: #374151;
 }
 
-.input-group input {
+.input-group input,
+.input-group select {
     width: 180px;
     padding: 10px;
-    border: 1px solid #9ca3af;
+    border: 1px solid #d1d5db;
     border-radius: 6px;
     outline: none;
-    color: #111827;
-    font-weight: 500;
+    background: white;
+    color: #1f2937;
 }
 
 .input-group input:focus {
@@ -73,7 +74,8 @@
         align-items: stretch;
     }
 
-    .input-group input {
-        width: 100%;
-    }
+   .input-group input,
+   .input-group select {
+       width: 100%;
+   }
 }

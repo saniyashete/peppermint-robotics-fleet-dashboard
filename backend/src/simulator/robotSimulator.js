@@ -3,6 +3,7 @@ const DEFAULT_CONFIG = {
   updateInterval: Number(process.env.UPDATE_INTERVAL) || 1000,
   siteWidth: Number(process.env.SITE_WIDTH) || 1000,
   siteHeight: Number(process.env.SITE_HEIGHT) || 600,
+  payloadSize: process.env.PAYLOAD_SIZE || "normal",
 };
 
 const statuses = [
@@ -28,9 +29,46 @@ class RobotSimulator {
     };
   }
 
+  formatPayload(robot) {
+    // Minimal payload
+    if (this.config.payloadSize === "minimal") {
+      return {
+        robot_id: robot.robot_id,
+        robot_type: robot.robot_type,
+        x: robot.x,
+        y: robot.y,
+        battery: robot.battery,
+        status: robot.status,
+        lastUpdated: robot.lastUpdated,
+      };
+    }
+
+    // Large payload
+    if (this.config.payloadSize === "large") {
+      return {
+        ...robot,
+        metadata: {
+          locationAccuracy: Math.random() * 5,
+          temperature: 20 + Math.random() * 15,
+          speed: Math.random() * 10,
+          signalStrength: Math.floor(Math.random() * 100),
+          diagnostics: {
+            motorHealth: "good",
+            sensorHealth: "good",
+            navigationHealth: "good",
+          },
+        },
+      };
+    }
+
+    // Normal payload
+    return robot;
+  }
+
   createFleet() {
     this.robots = Array.from({ length: this.config.fleetSize }, (_, index) => ({
       robot_id: `r${index + 1}`,
+
       robot_type: index % 2 === 0 ? "AMR" : "Cleaning Robot",
 
       x: Math.random() * this.config.siteWidth,
@@ -45,6 +83,7 @@ class RobotSimulator {
 
     return this.robots;
   }
+
   updateConfig(newConfig) {
     this.config = {
       ...this.config,
@@ -55,6 +94,7 @@ class RobotSimulator {
   getConfig() {
     return this.config;
   }
+
   updateRobot(robot) {
     // Low battery → charging
     if (robot.battery <= 20) {
@@ -69,6 +109,8 @@ class RobotSimulator {
         robot.status = "idle";
       }
 
+      robot.lastUpdated = Date.now();
+
       return robot;
     }
 
@@ -79,7 +121,7 @@ class RobotSimulator {
       robot.x += (Math.random() - 0.5) * speed;
       robot.y += (Math.random() - 0.5) * speed;
 
-      // Keep robot inside site
+      // Keep robot inside site boundaries
       robot.x = Math.max(0, Math.min(this.config.siteWidth, robot.x));
 
       robot.y = Math.max(0, Math.min(this.config.siteHeight, robot.y));
@@ -106,21 +148,25 @@ class RobotSimulator {
 
     // Send newly created robots immediately
     this.robots.forEach((robot) => {
-      this.onUpdate(robot);
+      this.onUpdate(this.formatPayload(robot));
     });
 
     this.interval = setInterval(() => {
       this.robots = this.robots.map((robot) => {
         const updatedRobot = this.updateRobot(robot);
 
-        this.onUpdate(updatedRobot);
+        // Format payload based on configured payload size
+        this.onUpdate(this.formatPayload(updatedRobot));
 
         return updatedRobot;
       });
     }, this.config.updateInterval);
 
     console.log(`Robot simulator started with ${this.config.fleetSize} robots`);
+
+    console.log(`Payload size mode: ${this.config.payloadSize}`);
   }
+
   stop() {
     clearInterval(this.interval);
   }

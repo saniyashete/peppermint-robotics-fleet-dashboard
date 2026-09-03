@@ -6,6 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 function ConfigPanel() {
   const [fleetSize, setFleetSize] = useState("");
   const [updateInterval, setUpdateInterval] = useState("");
+  const [payloadSize, setPayloadSize] = useState("normal");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -14,6 +15,7 @@ function ConfigPanel() {
       .then((data) => {
         setFleetSize(data.fleetSize);
         setUpdateInterval(data.updateInterval);
+        setPayloadSize(data.payloadSize || "normal");
       })
       .catch((error) => console.error(error));
   }, []);
@@ -31,6 +33,7 @@ function ConfigPanel() {
         body: JSON.stringify({
           fleetSize: Number(fleetSize),
           updateInterval: Number(updateInterval),
+          payloadSize,
         }),
       });
 
@@ -56,6 +59,7 @@ function ConfigPanel() {
       </div>
 
       <form onSubmit={handleSubmit} className="config-form">
+        {/* Fleet Size */}
         <div className="input-group">
           <label>Fleet Size</label>
 
@@ -67,6 +71,7 @@ function ConfigPanel() {
           />
         </div>
 
+        {/* Update Interval */}
         <div className="input-group">
           <label>Update Interval (ms)</label>
 
@@ -77,6 +82,20 @@ function ConfigPanel() {
             value={updateInterval}
             onChange={(event) => setUpdateInterval(event.target.value)}
           />
+        </div>
+
+        {/* Payload Size */}
+        <div className="input-group">
+          <label>Payload Size</label>
+
+          <select
+            value={payloadSize}
+            onChange={(event) => setPayloadSize(event.target.value)}
+          >
+            <option value="minimal">Minimal</option>
+            <option value="normal">Normal</option>
+            <option value="large">Large</option>
+          </select>
         </div>
 
         <button type="submit" disabled={loading}>
